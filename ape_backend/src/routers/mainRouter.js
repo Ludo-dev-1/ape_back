@@ -1,0 +1,12 @@
+import { Router } from "express";
+import mainController from "../controllers/mainController.js";
+
+const mainRouter = Router();
+
+// Route pour récupérer tous les articles
+mainRouter.get("/articles", mainController.getArticles);
+
+// Route pour récupérer un article par son ID
+mainRouter.get("/article/:id", mainController.getArticle);
+
+export { mainRouter };
