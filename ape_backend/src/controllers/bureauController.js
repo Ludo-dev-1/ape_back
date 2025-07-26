@@ -22,6 +22,22 @@ const bureauController = {
             res.status(500).json({ message: "Erreur lors de la création de l'article", error });
         }
     },
+    deleteArticle: async (req, res) => {
+        const { id } = req.params;
+
+        try {
+            const article = await Articles.findByPk(id);
+            if (!article) {
+                return res.status(404).json({ message: "Article non trouvé" });
+            }
+
+            await article.destroy();
+            res.status(200).json({ message: "Article supprimé avec succès" });
+        } catch (error) {
+            console.error("Erreur deleteArticle:", error);
+            res.status(500).json({ message: "Erreur lors de la suppression de l'article", error });
+        }
+    },
 
 }
 

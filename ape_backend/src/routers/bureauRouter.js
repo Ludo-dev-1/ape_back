@@ -17,5 +17,6 @@ const upload = multer({ storage });
 const bureauRouter = Router();
 
 bureauRouter.post('/articles', upload.single('image'), bureauController.createArticle);
+bureauRouter.delete('/articles/:id', bureauController.deleteArticle);
 
 export { bureauRouter };
