@@ -38,6 +38,31 @@ const bureauController = {
             res.status(500).json({ message: "Erreur lors de la suppression de l'article", error });
         }
     },
+    updateArticle: async (req, res) => {
+        const { id } = req.params;
+        const { titre, contenu_bref, contenu } = req.body;
+
+        try {
+            const article = await Articles.findByPk(id);
+            if (!article) {
+                return res.status(404).json({ message: "Article non trouvé" });
+            }
+
+            article.titre = titre;
+            article.contenu_bref = contenu_bref;
+            article.contenu = contenu;
+
+            if (req.file) {
+                article.image = `/uploads/${req.file.filename}`;
+            }
+
+            await article.save();
+            res.status(200).json(article);
+        } catch (error) {
+            console.error("Erreur updateArticle:", error);
+            res.status(500).json({ message: "Erreur lors de la mise à jour de l'article", error });
+        }
+    },
 
 }
 

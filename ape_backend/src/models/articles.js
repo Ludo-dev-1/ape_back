@@ -17,7 +17,7 @@ Articles.init({
     },
     contenu_bref: {
         type: DataTypes.TEXT,
-        allowNull: false,
+        allowNull: true,
     },
     contenu: {
         type: DataTypes.TEXT,

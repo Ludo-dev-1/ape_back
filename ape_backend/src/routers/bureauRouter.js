@@ -18,5 +18,6 @@ const bureauRouter = Router();
 
 bureauRouter.post('/articles', upload.single('image'), bureauController.createArticle);
 bureauRouter.delete('/articles/:id', bureauController.deleteArticle);
+bureauRouter.put('/articles/:id', upload.single('image'), bureauController.updateArticle);
 
 export { bureauRouter };
