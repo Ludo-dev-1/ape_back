@@ -22,10 +22,15 @@ Evenements.init({
         type: DataTypes.TEXT,
         allowNull: true,
     },
+    image: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+    },
 },
     {
         sequelize,
-        tableName: "evenements"
+        tableName: "evenements",
+        timestamps: false, // Ajoute les champs createdAt et updatedAt
     });
 
 

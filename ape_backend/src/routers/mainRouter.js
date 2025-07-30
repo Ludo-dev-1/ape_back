@@ -5,6 +5,7 @@ const mainRouter = Router();
 
 // Route pour récupérer tous les articles
 mainRouter.get("/articles", mainController.getArticles);
+mainRouter.get("/events", mainController.getEvents);
 
 // Route pour récupérer un article par son ID
 mainRouter.get("/article/:id", mainController.getArticle);
