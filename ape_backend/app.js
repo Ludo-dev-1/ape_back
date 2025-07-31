@@ -3,6 +3,14 @@ import sequelize, { connectToDatabase } from './src/models/database.js';
 import cors from 'cors';
 import { mainRouter } from './src/routers/mainRouter.js';
 import { bureauRouter } from './src/routers/bureauRouter.js';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+import fs from 'fs';
+
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -14,7 +22,13 @@ app.use(cors());
 app.use(express.json());
 
 // Configuration des fichiers statiques
-app.use("/uploads", express.static("public/uploads"));
+app.use('/uploads', (req, res, next) => {
+    console.log('Requête sur /uploads:', req.url);
+    next();
+});
+app.use('/uploads', express.static(join(__dirname, 'uploads')));
+
+
 
 // Liste des routes
 app.use(mainRouter);

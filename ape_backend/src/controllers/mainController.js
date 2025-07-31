@@ -66,6 +66,19 @@ const mainController = {
         } catch (err) {
             res.status(500).json({ message: err.message });
         }
+    },
+    getEvent: async (req, res) => {
+        try {
+            const event = await Evenements.findByPk(req.params.id);
+
+            if (!event) {
+                return res.status(404).json({ message: "Événement non trouvé." });
+            }
+
+            res.status(200).json(event);
+        } catch (err) {
+            res.status(500).json({ message: err.message });
+        }
     }
 
 }

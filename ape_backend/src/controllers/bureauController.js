@@ -1,4 +1,4 @@
-import { Articles } from "../models/associations.js";
+import { Articles, Evenements } from "../models/associations.js";
 
 const bureauController = {
     createArticle: async (req, res) => {
@@ -11,7 +11,7 @@ const bureauController = {
                 titre,
                 contenu_bref,
                 contenu,
-                image: `/uploads/${req.file.filename}`,
+                image: `../uploads/${req.file.filename}`,
                 date_publication: new Date(),
                 auteur_id: 1,  // ou req.user.id si défini
             });
@@ -61,6 +61,24 @@ const bureauController = {
         } catch (error) {
             console.error("Erreur updateArticle:", error);
             res.status(500).json({ message: "Erreur lors de la mise à jour de l'article", error });
+        }
+    },
+    createEvent: async (req, res) => {
+        const { titre, description, date_event } = req.body;
+
+        try {
+            const newEvent = await Evenements.create({
+                titre,
+                description,
+                date_event: new Date(date_event),
+                image: req.file ? `/uploads/${req.file.filename}` : null,
+                auteur_id: 1,  // ou req.user.id si défini
+            });
+            console.log("Image chargée:", newEvent.image);
+            res.status(201).json(newEvent);
+        } catch (error) {
+            console.error("Erreur createEvent:", error);
+            res.status(500).json({ message: "Erreur lors de la création de l'événement", error });
         }
     },
 

@@ -9,5 +9,6 @@ mainRouter.get("/events", mainController.getEvents);
 
 // Route pour récupérer un article par son ID
 mainRouter.get("/article/:id", mainController.getArticle);
+mainRouter.get("/event/:id", mainController.getEvent);
 
 export { mainRouter };
