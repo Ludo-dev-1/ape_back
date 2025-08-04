@@ -11,11 +11,11 @@ const bureauController = {
                 titre,
                 contenu_bref,
                 contenu,
-                image: `../uploads/${req.file.filename}`,
+                image: req.file ? `/uploads/${req.file.filename}` : null,
                 date_publication: new Date(),
                 auteur_id: 1,  // ou req.user.id si défini
             });
-
+            console.log("Image chargée:", newArticle.image);
             res.status(201).json(newArticle);
         } catch (error) {
             console.error("Erreur createArticle:", error);
