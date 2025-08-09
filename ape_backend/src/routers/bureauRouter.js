@@ -30,7 +30,7 @@ bureauRouter.put('/articles/:id', upload.single('image'), bureauController.updat
 
 // ➤ Routes pour les événements
 bureauRouter.post('/events', upload.single('image'), bureauController.createEvent);
-/* bureauRouter.delete('/events/:id', bureauController.deleteEvent); */
+bureauRouter.delete('/events/:id', bureauController.deleteEvent);
 bureauRouter.put('/events/:id', upload.single('image'), bureauController.updateEvent);
 
 export { bureauRouter };

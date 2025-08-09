@@ -106,6 +106,22 @@ const bureauController = {
             res.status(500).json({ message: "Erreur lors de la mise à jour de l'événement", error });
         }
     },
+    deleteEvent: async (req, res) => {
+        const { id } = req.params;
+
+        try {
+            const event = await Evenements.findByPk(id);
+            if (!event) {
+                return res.status(404).json({ message: "Événement non trouvé" });
+            }
+
+            await event.destroy();
+            res.status(200).json({ message: "Événement supprimé avec succès" });
+        } catch (error) {
+            console.error("Erreur deleteEvent:", error);
+            res.status(500).json({ message: "Erreur lors de la suppression de l'événement", error });
+        }
+    },
 
 }
 
