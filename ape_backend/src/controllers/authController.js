@@ -5,74 +5,80 @@ import { v4 as uuidv4 } from "uuid";
 import { withTransaction } from "../utils/commonOperations.js";
 
 const authController = {
-    login: async (req, res) => {
-        const { email, password } = req.body;
 
-        try {
-            const user = await Parents.findOne({ where: { email } });
-
-            if (!user) {
-                return res.status(401).json({ message: "Email ou mot de passe incorrect" });
-            }
-
-            const isValid = await argon2.verify(user.password, password);
-
-            if (!isValid) {
-                return res.status(401).json({ message: "Email ou mot de passe incorrect" });
-            }
-
-            const token = generateToken(user);
-            return res.json({ token });
-        } catch (error) {
-            console.error("Erreur lors de la connexion :", error);
-            return res.status(500).json({ message: "Erreur serveur" });
-        }
-    },
-
-    register: async (req, res) => {
-        const verificationToken = uuidv4();
+    register: async (req, res, next) => {
         try {
             const { firstname, lastname, email, password, repeat_password, role_id } = req.body;
 
-            const result = await withTransaction(async (transaction) => {
-                // Vérification de l'existence de l'utilisateur
-                const existingUser = await Parents.findOne({ where: { email }, transaction });
-                if (existingUser) {
-                    const error = new Error("Une erreur s'est produite lors de la création du compte");
-                    error.statusCode = 400;
-                    throw error;
-                }
+            if (password !== repeat_password) {
+                return res.status(400).json({ message: "Les mots de passe ne correspondent pas" });
+            }
 
-                const hash = await argon2.hash(password);
+            const existingUser = await Parents.findOne({ where: { email } });
+            if (existingUser) {
+                return res.status(400).json({ message: "Un utilisateur avec cet email existe déjà" });
+            }
 
-                // Création de l'utilisateur
-                const newUser = await Parents.create({
-                    firstname,
-                    lastname,
-                    email,
-                    password: hash,
-                    role_id,
-                    emailVerified: false,
-                    verificationToken
-                }, { transaction });
+            const hash = await argon2.hash(password);
 
-
-                return newUser;
+            const newUser = await Parents.create({
+                prenom: firstname,
+                nom: lastname,
+                email,
+                password: hash,
+                role_id
             });
 
             res.status(201).json({
                 message: "Utilisateur créé avec succès",
                 user: {
-                    id: result.id,
-                    firstname: result.firstname,
-                    lastname: result.lastname,
-                    email: result.email
+                    id: newUser.id,
+                    prenom: newUser.prenom,
+                    nom: newUser.nom,
+                    email: newUser.email
                 }
             });
+
+        } catch (error) {
+            console.error(error);
+            next(error);
+        }
+    }
+
+    ,
+    login: async (req, res, next) => {
+        try {
+            const { email, password } = req.body;
+
+            // Vérification des identifiants
+            const user = await Parents.findOne({ where: { email } });
+            if (!user) {
+                const error = new Error("Identifiants invalides");
+                error.statusCode = 401;
+                throw error;
+            }
+
+            const isValid = await argon2.verify(user.password, password);
+            if (!isValid) {
+                const error = new Error("Identifiants invalides");
+                error.statusCode = 401;
+                throw error;
+            }
+
+            // Génération du token
+            const token = generateToken(user.id);
+
+            res.status(200).json({
+                message: "Connexion réussie",
+                token
+            });
+
+            console.log(token);
+
         } catch (error) {
             next(error);
-        };
-    },
+        }
+    }
 }
 
 export default authController;

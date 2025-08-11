@@ -8,6 +8,7 @@ export const generateToken = (user) => {
     }
 
     const secret = process.env.JWT_SECRET;
+
     const options = { expiresIn: "8h" }; // Expiration du token dans 8h : à vérifier syntaxe
 
     return jwt.sign(payload, secret, options);

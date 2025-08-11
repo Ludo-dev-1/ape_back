@@ -24,6 +24,10 @@ Parents.init({
         primaryKey: true,
         autoIncrement: true,
     },
+    password: {
+        type: DataTypes.STRING(100),
+        allowNull: false,
+    },
     role_id: {
         type: DataTypes.INTEGER,
         references: {
@@ -35,7 +39,10 @@ Parents.init({
 
 }, {
     sequelize,
-    tableName: "parents"
+    tableName: "parents",
+    timestamps: false,
+    createdAt: "created_at",
+    updatedAt: "updated_at"
 });
 
 
