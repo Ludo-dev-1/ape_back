@@ -65,15 +65,27 @@ const authController = {
                 throw error;
             }
 
+            console.log("user:", user);
             // Génération du token
-            const token = generateToken(user.id);
+            const token = generateToken({
+                id: user.id,
+                email: user.email,
+                role_id: user.role_id
+            });
 
             res.status(200).json({
                 message: "Connexion réussie",
-                token
+                token,
+                user: {
+                    id: user.id,
+                    prenom: user.prenom,
+                    nom: user.nom,
+                    email: user.email,
+                    role_id: user.role_id
+                }
             });
 
-            console.log(token);
+            console.log("Token généré:", token);
 
         } catch (error) {
             next(error);
