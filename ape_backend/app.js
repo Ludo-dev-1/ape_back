@@ -4,6 +4,7 @@ import cors from 'cors';
 import { mainRouter } from './src/routers/mainRouter.js';
 import { bureauRouter } from './src/routers/bureauRouter.js';
 import authRouter from './src/routers/authRouter.js';
+import adminRouter from './src/routers/adminRouter.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
@@ -35,6 +36,7 @@ app.use('/uploads', express.static(join(__dirname, 'uploads')));
 app.use(mainRouter);
 app.use('/bureau', bureauRouter);
 app.use('/auth', authRouter);
+app.use('/admin', adminRouter);
 
 // Connexion à la base
 connectToDatabase();
