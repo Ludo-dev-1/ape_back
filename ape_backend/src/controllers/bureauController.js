@@ -1,128 +1,130 @@
-import { Articles, Evenements } from "../models/associations.js";
+import { Articles, Evenements } from '../models/associations.js';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const bureauController = {
+    // ➤ Articles
     createArticle: async (req, res) => {
-        const { titre, contenu_bref, contenu } = req.body;
-        console.log("Received data:", req.body);
-        console.log("req.file:", req.file);
-
         try {
-            const newArticle = await Articles.create({
+            const { titre, contenu, contenu_bref } = req.body;
+            const image = req.file ? `/uploads/${req.file.filename}` : null;
+
+            const newArticle = await Article.create({
                 titre,
-                contenu_bref,
                 contenu,
-                image: req.file ? `/uploads/${req.file.filename}` : null,
-                date_publication: new Date(),
-                auteur_id: 1,  // ou req.user.id si défini
+                contenu_bref,
+                image
             });
-            console.log("Image chargée:", newArticle.image);
+
             res.status(201).json(newArticle);
         } catch (error) {
-            console.error("Erreur createArticle:", error);
-            res.status(500).json({ message: "Erreur lors de la création de l'article", error });
+            console.error(error);
+            res.status(500).json({ message: "Erreur serveur" });
         }
     },
-    deleteArticle: async (req, res) => {
-        const { id } = req.params;
 
-        try {
-            const article = await Articles.findByPk(id);
-            if (!article) {
-                return res.status(404).json({ message: "Article non trouvé" });
-            }
-
-            await article.destroy();
-            res.status(200).json({ message: "Article supprimé avec succès" });
-        } catch (error) {
-            console.error("Erreur deleteArticle:", error);
-            res.status(500).json({ message: "Erreur lors de la suppression de l'article", error });
-        }
-    },
     updateArticle: async (req, res) => {
-        const { id } = req.params;
-        const { titre, contenu_bref, contenu } = req.body;
-
         try {
+            const { id } = req.params;
+            const { titre, contenu, contenu_bref } = req.body;
             const article = await Articles.findByPk(id);
-            if (!article) {
-                return res.status(404).json({ message: "Article non trouvé" });
-            }
 
-            article.titre = titre;
-            article.contenu_bref = contenu_bref;
-            article.contenu = contenu;
+            if (!article) return res.status(404).json({ message: "Article non trouvé" });
 
+            // Si une nouvelle image est uploadée, on met à jour le chemin
             if (req.file) {
                 article.image = `/uploads/${req.file.filename}`;
             }
 
+            article.titre = titre;
+            article.contenu = contenu;
+            article.contenu_bref = contenu_bref;
+
             await article.save();
+
             res.status(200).json(article);
         } catch (error) {
-            console.error("Erreur updateArticle:", error);
-            res.status(500).json({ message: "Erreur lors de la mise à jour de l'article", error });
+            console.error(error);
+            res.status(500).json({ message: "Erreur serveur" });
         }
     },
-    createEvent: async (req, res) => {
-        const { titre, description, date_event } = req.body;
 
+    deleteArticle: async (req, res) => {
         try {
+            const { id } = req.params;
+            const article = await Articles.findByPk(id);
+            if (!article) return res.status(404).json({ message: "Article non trouvé" });
+
+            await article.destroy();
+            res.status(200).json({ message: "Article supprimé" });
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ message: "Erreur serveur" });
+        }
+    },
+
+    // ➤ Événements
+    createEvent: async (req, res) => {
+        try {
+            const { titre, description, date_event } = req.body;
+            const image = req.file ? `/uploads/${req.file.filename}` : null;
+
             const newEvent = await Evenements.create({
                 titre,
                 description,
-                date_event: new Date(date_event),
-                image: req.file ? `/uploads/${req.file.filename}` : null,
-                auteur_id: 1,  // ou req.user.id si défini
+                date_event,
+                image
             });
-            console.log("Image chargée:", newEvent.image);
+
             res.status(201).json(newEvent);
         } catch (error) {
-            console.error("Erreur createEvent:", error);
-            res.status(500).json({ message: "Erreur lors de la création de l'événement", error });
+            console.error(error);
+            res.status(500).json({ message: "Erreur serveur" });
         }
     },
+
     updateEvent: async (req, res) => {
-        const { id } = req.params;
-        const { titre, description, date_event } = req.body;
-
         try {
+            const { id } = req.params;
+            const { titre, description, date_event } = req.body;
             const event = await Evenements.findByPk(id);
-            if (!event) {
-                return res.status(404).json({ message: "Événement non trouvé" });
-            }
 
-            event.titre = titre;
-            event.description = description;
-            event.date_event = new Date(date_event);
+            if (!event) return res.status(404).json({ message: "Événement non trouvé" });
 
             if (req.file) {
                 event.image = `/uploads/${req.file.filename}`;
             }
 
+            event.titre = titre;
+            event.description = description;
+            event.date_event = date_event;
+
             await event.save();
+
             res.status(200).json(event);
         } catch (error) {
-            console.error("Erreur updateEvent:", error);
-            res.status(500).json({ message: "Erreur lors de la mise à jour de l'événement", error });
+            console.error(error);
+            res.status(500).json({ message: "Erreur serveur" });
         }
     },
-    deleteEvent: async (req, res) => {
-        const { id } = req.params;
 
+    deleteEvent: async (req, res) => {
         try {
+            const { id } = req.params;
             const event = await Evenements.findByPk(id);
-            if (!event) {
-                return res.status(404).json({ message: "Événement non trouvé" });
-            }
+            if (!event) return res.status(404).json({ message: "Événement non trouvé" });
 
             await event.destroy();
-            res.status(200).json({ message: "Événement supprimé avec succès" });
+            res.status(200).json({ message: "Événement supprimé" });
         } catch (error) {
-            console.error("Erreur deleteEvent:", error);
-            res.status(500).json({ message: "Erreur lors de la suppression de l'événement", error });
+            console.error(error);
+            res.status(500).json({ message: "Erreur serveur" });
         }
-    },
-
-}
+    }
+};
 
 export default bureauController;

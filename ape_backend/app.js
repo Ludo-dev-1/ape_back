@@ -3,6 +3,7 @@ import sequelize, { connectToDatabase } from './src/models/database.js';
 import cors from 'cors';
 import { mainRouter } from './src/routers/mainRouter.js';
 import { bureauRouter } from './src/routers/bureauRouter.js';
+import { authenticate } from './src/authenticate/auth.js';
 import authRouter from './src/routers/authRouter.js';
 import adminRouter from './src/routers/adminRouter.js';
 import path from 'path';
@@ -17,12 +18,6 @@ const __dirname = dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware CORS
-app.use(cors());
-
-// Middleware
-app.use(express.json());
-
 // Configuration des fichiers statiques
 app.use('/uploads', (req, res, next) => {
     console.log('Requête sur /uploads:', req.url);
@@ -30,16 +25,21 @@ app.use('/uploads', (req, res, next) => {
 });
 app.use('/uploads', express.static(join(__dirname, 'uploads')));
 
+// Middleware CORS
+app.use(cors());
 
+// Middleware
+app.use(express.json());
+
+// Connexion à la base
+connectToDatabase();
 
 // Liste des routes
 app.use(mainRouter);
 app.use('/bureau', bureauRouter);
 app.use('/auth', authRouter);
-app.use('/admin', adminRouter);
+app.use('/admin', authenticate, adminRouter);
 
-// Connexion à la base
-connectToDatabase();
 
 app.listen(PORT, () => {
     console.log(`🚀 Serveur lancé sur http://localhost:${PORT}`);
