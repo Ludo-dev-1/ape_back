@@ -4,6 +4,7 @@ import cors from 'cors';
 import { mainRouter } from './src/routers/mainRouter.js';
 import { bureauRouter } from './src/routers/bureauRouter.js';
 import { authenticate } from './src/authenticate/auth.js';
+import shopRouter from './src/routers/shopRoutes.js';
 import authRouter from './src/routers/authRouter.js';
 import adminRouter from './src/routers/adminRouter.js';
 import path from 'path';
@@ -39,6 +40,7 @@ app.use(mainRouter);
 app.use('/bureau', bureauRouter);
 app.use('/auth', authRouter);
 app.use('/admin', authenticate, adminRouter);
+app.use('/shop', shopRouter);
 
 
 app.listen(PORT, () => {
