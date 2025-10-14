@@ -38,4 +38,5 @@ Parents.hasMany(Articles, { foreignKey: 'auteur_id', as: 'articles' });
 
 
 
+
 export { Parents, Roles, Evenements, Articles, Sale, Order, OrderItem, Product, sequelize };

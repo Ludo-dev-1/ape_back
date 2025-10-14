@@ -9,6 +9,9 @@ const shopController = {
                 where: { is_active: true },
                 include: [{ model: Product, as: "products" }],
             });
+            sales.forEach(sale => {
+                console.log(sale.products);
+            });
             res.json(sales);
         } catch (error) {
             console.error(error);
@@ -19,14 +22,29 @@ const shopController = {
     getProductsBySale: async (req, res) => {
         try {
             const sale = await Sale.findByPk(req.params.id, {
-                include: [{ model: Product, as: "products" }],
+                include: [
+                    { model: Product, as: "products" }
+                ],
             });
+
             if (!sale) return res.status(404).json({ message: "Vente non trouvée" });
-            res.json(sale.products);
+
+            // Ajouter saleName et saleIsActive à chaque produit
+            const productsWithSaleInfo = sale.products.map(product => ({
+                ...product.toJSON(),
+                saleName: sale.name,
+                saleIsActive: sale.is_active
+            }));
+
+            console.log(productsWithSaleInfo);
+            res.json(productsWithSaleInfo);
+
         } catch (error) {
+            console.error(error);
             res.status(500).json({ message: "Erreur serveur" });
         }
     },
+
     /** 🔹 POST créer une commande pour un parent */
     createOrder: async (req, res) => {
         try {

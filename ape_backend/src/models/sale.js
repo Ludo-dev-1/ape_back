@@ -22,13 +22,17 @@ Sale.init(
             type: DataTypes.BOOLEAN,
             defaultValue: false,
         },
+        picture: {
+            type: DataTypes.STRING,
+            allowNull: true,
+        },
     },
     {
         sequelize,
         modelName: "sale",
-        tableName: "sales", // important si ta table est en snake_case
+        tableName: "sales",
         timestamps: true,
-        underscored: true  // 👉 Sequelize attendra created_at / updated_at
+        underscored: true
     }
 
 );

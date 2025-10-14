@@ -13,7 +13,7 @@ const bureauController = {
             const { titre, contenu, contenu_bref } = req.body;
             const image = req.file ? `/uploads/${req.file.filename}` : null;
 
-            const newArticle = await Article.create({
+            const newArticle = await Articles.create({
                 titre,
                 contenu,
                 contenu_bref,

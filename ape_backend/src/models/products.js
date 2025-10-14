@@ -1,6 +1,6 @@
-// models/Product.js
 import { DataTypes, Model } from "sequelize";
 import sequelize from './database.js';
+import { Sale } from "./sale.js";
 
 export class Product extends Model { }
 
@@ -24,13 +24,23 @@ Product.init(
             type: DataTypes.BOOLEAN,
             defaultValue: true,
         },
+        // 👇 clé étrangère vers la table sales
+        sale_id: {
+            type: DataTypes.INTEGER,
+            allowNull: true,
+            references: {
+                model: "sales",
+                key: "id",
+            },
+        },
     },
     {
         sequelize,
         modelName: "product",
         tableName: "products",
         timestamps: true,
-        underscored: true
+        underscored: true,
     }
 );
+
 
