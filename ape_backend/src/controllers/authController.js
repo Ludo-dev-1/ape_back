@@ -90,7 +90,29 @@ const authController = {
         } catch (error) {
             next(error);
         }
+    },
+
+    getProfile: async (req, res, next) => {
+        try {
+            const userId = req.user.id;
+            const user = await Parents.findByPk(userId);
+            if (!user) {
+                return res.status(404).json({ message: "Utilisateur non trouvé" });
+            }
+            res.status(200).json({
+                id: user.id,
+                prenom: user.prenom,
+                nom: user.nom,
+                email: user.email,
+                role_id: user.role_id
+            });
+
+
+        } catch (error) {
+            next(error);
+        }
     }
+
 }
 
 export default authController;

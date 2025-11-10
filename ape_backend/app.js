@@ -27,8 +27,12 @@ app.use('/uploads', (req, res, next) => {
 app.use('/uploads', express.static(join(__dirname, 'uploads')));
 
 // Middleware CORS
-app.use(cors());
-
+app.use(
+    cors({
+        origin: "http://localhost:5173", // ton front local
+        credentials: true, // autorise l'envoi de cookies ou d'en-têtes auth
+    })
+);
 // Middleware
 app.use(express.json());
 
