@@ -55,14 +55,17 @@ const adminController = {
         }
     },
     // Créer une vente avec ses produits
+    // Créer une vente avec ses produits
     createSaleWithProducts: async (req, res) => {
         try {
-            const { name, start_date, end_date, is_active } = req.body;
+            const { name, start_date, end_date } = req.body;
 
-            // ⚡ Parse products correctement avant la validation
+            // Parse des produits (venant du front sous forme de string JSON)
             let parsedProducts = [];
             if (Array.isArray(req.body.products)) {
-                parsedProducts = req.body.products.map(p => (typeof p === "string" ? JSON.parse(p) : p));
+                parsedProducts = req.body.products.map((p) =>
+                    typeof p === "string" ? JSON.parse(p) : p
+                );
             } else if (typeof req.body.products === "string") {
                 parsedProducts = JSON.parse(req.body.products);
             }
@@ -71,30 +74,47 @@ const adminController = {
                 return res.status(400).json({ message: "Champs manquants" });
             }
 
-            // ✅ Création de la vente
-            const sale = await Sale.create({
+            // Calcul automatique de is_active selon les dates
+            const now = new Date();
+            const start = new Date(start_date);
+            const end = new Date(end_date);
+            end.setHours(23, 59, 59, 999);
+
+            const isActive = now >= start && now <= end;
+
+            // Gestion de l'image de la vente
+            let saleImagePath = null;
+            if (req.files?.saleImage?.[0]) {
+                saleImagePath = `/uploads/${req.files.saleImage[0].filename}`;
+            }
+
+            // Création de la vente
+            const newSale = await Sale.create({
                 name,
                 start_date,
                 end_date,
-                is_active: !!is_active,
-                picture: req.files?.saleImage ? `/uploads/${req.files.saleImage[0].filename}` : null,
+                is_active: isActive,
+                picture: saleImagePath,
             });
 
-            // ✅ Création des produits
-            const createdProducts = await Promise.all(
+            // Création des produits associés
+            const products = await Promise.all(
                 parsedProducts.map(async (prod, index) => {
                     const image = req.files?.productImages?.[index]?.filename;
                     return Product.create({
-                        ...prod,
-                        sale_id: sale.id,
+                        name: prod.name,
+                        price: prod.price,
+                        quantity: prod.quantity,
+                        description: prod.description || "",
+                        sale_id: newSale.id,
                         image_url: image ? `/uploads/${image}` : prod.image_url || null,
                     });
                 })
             );
 
             return res.status(201).json({
-                sale: sale.toJSON(),
-                products: createdProducts.map(p => p.toJSON()),
+                sale: newSale.toJSON(),
+                products: products.map((p) => p.toJSON()),
             });
         } catch (error) {
             console.error(error);
@@ -126,6 +146,17 @@ const adminController = {
     },
 
 
+    getAllSales: async (req, res) => {
+        try {
+            const sales = await Sale.findAll();
+            res.json(sales);
+        } catch (err) {
+            console.error(err);
+            res.status(500).json({ message: "Erreur serveur" });
+        }
+    },
+
+
     getAllSalesWithProducts: async (req, res) => {
         try {
             const products = await Product.findAll({ where: { sale_id: req.params.saleId } });
@@ -139,41 +170,62 @@ const adminController = {
     // Mettre à jour une vente et ses produits
     updateSaleWithProducts: async (req, res) => {
         try {
-            const { name, start_date, end_date, is_active } = req.body;
+            const { name, start_date, end_date } = req.body;
+
             const sale = await Sale.findByPk(req.params.id, {
-                include: { model: Product, as: "products" }
+                include: { model: Product, as: "products" },
             });
+
             if (!sale) return res.status(404).json({ message: "Vente non trouvée" });
-            // ⚡ Parse products correctement avant la validation
+
+            // Parse products correctement avant la validation
             let parsedProducts = [];
             if (Array.isArray(req.body.products)) {
-                parsedProducts = req.body.products.map(p => (typeof p === "string" ? JSON.parse(p) : p));
+                parsedProducts = req.body.products.map((p) =>
+                    typeof p === "string" ? JSON.parse(p) : p
+                );
             } else if (typeof req.body.products === "string") {
                 parsedProducts = JSON.parse(req.body.products);
             }
+
             if (!name || !start_date || !end_date || !parsedProducts || parsedProducts.length === 0) {
                 return res.status(400).json({ message: "Champs manquants" });
             }
-            // Mettre à jour la vente
+
+            // Calcul automatique de is_active selon les dates
+            const now = new Date();
+            const start = new Date(start_date);
+            const end = new Date(end_date);
+            end.setHours(23, 59, 59, 999); // inclure toute la journée de fin
+
+            const isActive = now >= start && now <= end;
+
+            // Mise à jour des infos de la vente
             sale.name = name;
             sale.start_date = start_date;
             sale.end_date = end_date;
-            sale.is_active = !!is_active;
+            sale.is_active = isActive;
+
             if (req.files?.saleImage) {
                 sale.picture = `/uploads/${req.files.saleImage[0].filename}`;
             }
+
             await sale.save();
-            // Mettre à jour ou créer les produits
+
+            // Mettre à jour ou créer les produits liés
             const updatedProducts = await Promise.all(
                 parsedProducts.map(async (prod, index) => {
                     const image = req.files?.productImages?.[index]?.filename;
-                    const existingProduct = sale.products.find(p => p.id === prod.id);
+                    const existingProduct = sale.products.find((p) => p.id === prod.id);
+
                     if (existingProduct) {
                         // Mettre à jour le produit existant
                         existingProduct.name = prod.name;
                         existingProduct.price = prod.price;
                         existingProduct.quantity = prod.quantity;
-                        existingProduct.image_url = image ? `/uploads/${image}` : existingProduct.image_url;
+                        existingProduct.image_url = image
+                            ? `/uploads/${image}`
+                            : existingProduct.image_url;
                         await existingProduct.save();
                         return existingProduct;
                     } else {
@@ -189,13 +241,14 @@ const adminController = {
 
             return res.status(200).json({
                 sale: sale.toJSON(),
-                products: updatedProducts.map(p => p.toJSON()),
+                products: updatedProducts.map((p) => p.toJSON()),
             });
         } catch (error) {
             console.error(error);
             return res.status(500).json({ message: "Erreur serveur" });
         }
     },
+
 
     deleteProduct: async (req, res) => {
         try {

@@ -2,11 +2,12 @@ import { Sale, Product, Order, OrderItem } from "../models/associations.js";
 
 const shopController = {
 
-    /** 🔹 GET toutes les ventes actives (avec produits) */
+    /**  GET toutes les ventes actives (avec produits) */
     getActiveSales: async (req, res) => {
         try {
             const sales = await Sale.findAll({
                 where: { is_active: true },
+                attributes: ["id", "name", "start_date", "end_date", "is_active", "picture"],
                 include: [{ model: Product, as: "products" }],
             });
             sales.forEach(sale => {
@@ -18,7 +19,7 @@ const shopController = {
             res.status(500).json({ message: "Erreur serveur" });
         }
     },
-    /** 🔹 GET produits d’une vente */
+    /**  GET produits d’une vente */
     getProductsBySale: async (req, res) => {
         try {
             const sale = await Sale.findByPk(req.params.id, {
@@ -45,7 +46,7 @@ const shopController = {
         }
     },
 
-    /** 🔹 POST créer une commande pour un parent */
+    /** POST créer une commande pour un parent */
     createOrder: async (req, res) => {
         try {
             const { parent_id, sale_id, items } = req.body;
@@ -71,7 +72,7 @@ const shopController = {
         }
     },
 
-    /** 🔹 GET une commande par son ID */
+    /** GET une commande par son ID */
     getOrderById: async (req, res) => {
         try {
             const order = await Order.findByPk(req.params.id, {
@@ -85,7 +86,7 @@ const shopController = {
         }
     },
 
-    /** 🔹 DELETE une commande par son ID */
+    /** DELETE une commande par son ID */
     deleteOrderById: async (req, res) => {
         try {
             const order = await Order.findByPk(req.params.id);
@@ -98,7 +99,7 @@ const shopController = {
         }
     },
 
-    /** 🔹 PUT mettre à jour une commande par son ID */
+    /** PUT mettre à jour une commande par son ID */
     updateOrderById: async (req, res) => {
         try {
             const order = await Order.findByPk(req.params.id);
@@ -118,7 +119,7 @@ const shopController = {
         }
     },
 
-    /** 🔹 GET toutes les commandes d’un parent */
+    /**  GET toutes les commandes d’un parent */
     getOrdersByParent: async (req, res) => {
         try {
             const orders = await Order.findAll({

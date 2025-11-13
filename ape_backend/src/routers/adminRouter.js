@@ -65,8 +65,11 @@ adminRouter.patch(
     ]),
     adminController.updateSaleWithProducts
 );
-// Récupérer toutes les ventes avec leurs produits
 
+adminRouter.get("/sales", authenticate, checkAdminAccess, adminController.getAllSales);
+
+
+// Récupérer toutes les ventes avec leurs produits
 adminRouter.get(
     "/sales/:saleId/products",
     authenticate,

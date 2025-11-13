@@ -1,5 +1,5 @@
 import { generateToken } from "../utils/jwt.js";
-import { Parents } from "../models/associations.js";
+import { Parents, Roles } from "../models/associations.js";
 import argon2 from "argon2";
 import { v4 as uuidv4 } from "uuid";
 import { withTransaction } from "../utils/commonOperations.js";
@@ -91,22 +91,63 @@ const authController = {
             next(error);
         }
     },
-
     getProfile: async (req, res, next) => {
         try {
             const userId = req.user.id;
-            const user = await Parents.findByPk(userId);
+
+            const user = await Parents.findByPk(userId, {
+                include: [
+                    {
+                        model: Roles,
+                        as: 'role',
+                        attributes: ['nom'], // on récupère seulement le nom du rôle
+                    },
+                ],
+                attributes: ['id', 'prenom', 'nom', 'email'], // on sélectionne les colonnes voulues
+            });
+
             if (!user) {
                 return res.status(404).json({ message: "Utilisateur non trouvé" });
             }
+
             res.status(200).json({
                 id: user.id,
                 prenom: user.prenom,
                 nom: user.nom,
                 email: user.email,
-                role_id: user.role_id
+                role: user.role ? user.role.nom : null, // 👈 rôle en texte, pas en id
             });
 
+        } catch (error) {
+            next(error);
+        }
+    },
+
+    changePassword: async (req, res, next) => {
+        console.log("Body reçu :", req.body);
+        try {
+            const userId = req.user.id;
+            const { currentPassword, newPassword, confirmPassword } = req.body;
+
+            if (newPassword !== confirmPassword) {
+                return res.status(400).json({ message: "Les mots de passe ne correspondent pas" });
+            }
+
+            const user = await Parents.findByPk(userId);
+            if (!user) {
+                return res.status(404).json({ message: "Utilisateur non trouvé" });
+            }
+
+            const isValid = await argon2.verify(user.password, currentPassword);
+            if (!isValid) {
+                return res.status(401).json({ message: "Mot de passe actuel invalide" });
+            }
+
+            const hash = await argon2.hash(newPassword);
+            user.password = hash;
+            await user.save();
+
+            res.status(200).json({ message: "Mot de passe modifié avec succès" });
 
         } catch (error) {
             next(error);
