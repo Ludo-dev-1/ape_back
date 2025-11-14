@@ -84,4 +84,6 @@ adminRouter.delete(
     adminController.deleteProduct
 );
 
+adminRouter.delete("/account/:email", authenticate, checkAdminAccess, adminController.deleteAccount);
+
 export default adminRouter;

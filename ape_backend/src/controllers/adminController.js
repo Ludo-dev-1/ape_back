@@ -262,6 +262,18 @@ const adminController = {
         }
     },
 
+    deleteAccount: async (req, res) => {
+        try {
+            const parent = await Parents.findOne({ where: { email: req.params.email } });
+            if (!parent) return res.status(404).json({ message: "Compte non trouvé" });
+            await parent.destroy();
+            res.json({ message: "Compte supprimé avec succès" });
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ message: "Erreur serveur" });
+        }
+    },
+
 
 }
 
