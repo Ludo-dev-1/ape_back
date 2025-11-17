@@ -1,2 +1,4 @@
 node_modules
 .env
+src/migrations/seed-admin.js
+uploads/

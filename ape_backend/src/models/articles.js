@@ -1,6 +1,6 @@
 import { Model, DataTypes } from 'sequelize';
 import sequelize from './database.js';
-import { Parents } from '../models/associations.js';
+
 
 
 export class Articles extends Model { }
@@ -35,12 +35,9 @@ Articles.init({
 
     auteur_id: {
         type: DataTypes.INTEGER,
-        references: {
-            model: Parents,
-            key: 'id',
-        },
-        allowNull: true,
+        allowNull: true
     }
+
 },
     {
         sequelize,
