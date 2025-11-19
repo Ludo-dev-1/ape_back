@@ -1,60 +1,56 @@
 import { Router } from "express";
-import { authenticate, checkAdminAccess } from "../authenticate/auth.js";
-import adminController from "../controllers/adminController.js";
 import multer from "multer";
 import path from "path";
-
+import { authenticate, checkAdminAccess } from "../authenticate/auth.js";
+import adminController from "../controllers/adminController.js";
+import { uploadBufferToSupabase } from '../../supabaseClient.js';
 
 const adminRouter = Router();
 
-// Multer pour gérer l'upload
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, "uploads/"); // dossier déjà servi statiquement
-    },
-    filename: (req, file, cb) => {
-        const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-        cb(null, uniqueSuffix + path.extname(file.originalname));
-    }
-});
+// Multer en mémoire
+const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
-// Routes pour l'administration
-adminRouter.get(
-    "/backoffice",
-    authenticate,
-    checkAdminAccess,
-    adminController.getParentsWithRoles
-);
+// Routes admin classiques
+adminRouter.get("/backoffice", authenticate, checkAdminAccess, adminController.getParentsWithRoles);
+adminRouter.put("/backoffice/update-role/:email", authenticate, checkAdminAccess, adminController.updateRole);
 
-adminRouter.put(
-    "/backoffice/update-role/:email",
-    authenticate,
-    checkAdminAccess,
-    adminController.updateRole
-);
-
-// Route pour créer une vente avec ses produits et images
+// Route pour créer une vente avec ses images
 adminRouter.post(
     "/sales",
     authenticate,
     checkAdminAccess,
     upload.fields([
         { name: "saleImage", maxCount: 1 },
-        { name: "productImages" } // tableau d’images produits
+        { name: "productImages", maxCount: 10 }
     ]),
-    adminController.createSaleWithProducts
+    async (req, res, next) => {
+        try {
+            // Sale image
+            if (req.files.saleImage) {
+                const saleFile = req.files.saleImage[0];
+                req.body.saleImageUrl = await uploadBufferToSupabase(
+                    saleFile.buffer,
+                    Date.now() + path.extname(saleFile.originalname)
+                );
+            }
+            // Product images
+            if (req.files.productImages) {
+                req.body.productImagesUrls = await Promise.all(
+                    req.files.productImages.map(file =>
+                        uploadBufferToSupabase(file.buffer, Date.now() + path.extname(file.originalname))
+                    )
+                );
+            }
+
+            await adminController.createSaleWithProducts(req, res);
+        } catch (err) {
+            next(err);
+        }
+    }
 );
 
-// Supprimer une vente
-adminRouter.delete(
-    "/sales/:id",
-    authenticate,
-    checkAdminAccess,
-    adminController.deleteSale
-);
-
-// Mettre à jour une vente
+// Mise à jour d’une vente avec images
 adminRouter.patch(
     "/sales/:id",
     authenticate,
@@ -63,27 +59,33 @@ adminRouter.patch(
         { name: "saleImage", maxCount: 1 },
         { name: "productImages", maxCount: 10 },
     ]),
-    adminController.updateSaleWithProducts
+    async (req, res, next) => {
+        try {
+            if (req.files.saleImage) {
+                const saleFile = req.files.saleImage[0];
+                req.body.saleImageUrl = await uploadBufferToSupabase(
+                    saleFile.buffer,
+                    Date.now() + path.extname(saleFile.originalname)
+                );
+            }
+            if (req.files.productImages) {
+                req.body.productImagesUrls = await Promise.all(
+                    req.files.productImages.map(file =>
+                        uploadBufferToSupabase(file.buffer, Date.now() + path.extname(file.originalname))
+                    )
+                );
+            }
+            await adminController.updateSaleWithProducts(req, res);
+        } catch (err) {
+            next(err);
+        }
+    }
 );
 
+adminRouter.delete("/sales/:id", authenticate, checkAdminAccess, adminController.deleteSale);
 adminRouter.get("/sales", authenticate, checkAdminAccess, adminController.getAllSales);
-
-
-// Récupérer toutes les ventes avec leurs produits
-adminRouter.get(
-    "/sales/:saleId/products",
-    authenticate,
-    checkAdminAccess,
-    adminController.getAllSalesWithProducts
-);
-
-adminRouter.delete(
-    "/products/:id",
-    authenticate,
-    checkAdminAccess,
-    adminController.deleteProduct
-);
-
+adminRouter.get("/sales/:saleId/products", authenticate, checkAdminAccess, adminController.getAllSalesWithProducts);
+adminRouter.delete("/products/:id", authenticate, checkAdminAccess, adminController.deleteProduct);
 adminRouter.delete("/account/:email", authenticate, checkAdminAccess, adminController.deleteAccount);
 
 export default adminRouter;

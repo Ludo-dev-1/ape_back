@@ -1,5 +1,5 @@
 import { Model, DataTypes } from 'sequelize';
-import sequelize from './database.js';
+import { sequelize } from './database.js';
 
 
 export class Roles extends Model { }
@@ -18,7 +18,8 @@ Roles.init({
 
 }, {
     sequelize,
-    tableName: "roles"
+    tableName: "roles",
+    timestamps: false,
 });
 
 

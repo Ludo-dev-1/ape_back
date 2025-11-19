@@ -1,5 +1,5 @@
 import express from 'express';
-import sequelize, { connectToDatabase } from './src/models/database.js';
+import { sequelize, connectToDatabase } from './src/models/database.js';
 import cors from 'cors';
 import { mainRouter } from './src/routers/mainRouter.js';
 import { bureauRouter } from './src/routers/bureauRouter.js';
@@ -11,6 +11,8 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import fs from 'fs';
+import uploadRouter from './src/routers/shopRoutes.js';
+
 
 
 const __filename = fileURLToPath(import.meta.url);
@@ -27,26 +29,38 @@ app.use('/uploads', (req, res, next) => {
 app.use('/uploads', express.static(join(__dirname, 'uploads')));
 
 // Middleware CORS
-app.use(
-    cors({
-        origin: "http://localhost:5173", // ton front local
-        credentials: true, // autorise l'envoi de cookies ou d'en-têtes auth
-    })
-);
+const allowedOrigins = [
+    "http://localhost:5173",           // Front local pour dev
+    //"https://ape-frontend.vercel.app" // À remplacer par ton URL front en prod
+];
+
+app.use(cors({
+    origin: function (origin, callback) {
+        // Autorise les requêtes sans origin (ex: Postman) ou celles listées
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error("CORS: origine non autorisée"));
+        }
+    },
+    credentials: true, // autorise cookies et headers auth
+}));
+
 // Middleware
 app.use(express.json());
 
-// Connexion à la base
-connectToDatabase();
 
 // Liste des routes
 app.use(mainRouter);
+app.use('/api', uploadRouter);
 app.use('/bureau', bureauRouter);
 app.use('/auth', authRouter);
 app.use('/admin', authenticate, adminRouter);
 app.use('/shop', shopRouter);
 
-
-app.listen(PORT, () => {
-    console.log(`🚀 Serveur lancé sur http://localhost:${PORT}`);
+// Connexion à la base
+connectToDatabase().then(() => {
+    app.listen(PORT, () => {
+        console.log(`🚀 Serveur lancé sur http://localhost:${PORT}`);
+    });
 });

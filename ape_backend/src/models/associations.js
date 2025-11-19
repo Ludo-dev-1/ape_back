@@ -1,4 +1,4 @@
-import sequelize from '../../src/models/database.js';
+import { sequelize } from './database.js';
 import { Roles } from './roles.js';
 import { Parents } from './parents.js';
 import { Evenements } from './evenements.js';
