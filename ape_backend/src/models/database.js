@@ -2,7 +2,7 @@ import { Sequelize } from "sequelize";
 import dotenv from "dotenv";
 dotenv.config();
 
-export const sequelize = new Sequelize(process.env.PG_URL, {
+export const sequelize = new Sequelize(process.env.DATABASE_URL, {
     dialect: "postgres",
     dialectOptions: { ssl: { require: true, rejectUnauthorized: false } },
     define: { timestamps: true, createdAt: "created_at", updatedAt: "updated_at" },
