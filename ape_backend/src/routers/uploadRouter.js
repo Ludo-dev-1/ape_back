@@ -1,22 +1,27 @@
 import express from 'express';
-import { supabase } from '../supabaseClient.js';
+import { supabase } from '../../supabaseClient.js';
 import multer from 'multer';
 import fs from 'fs';
-import path from 'path';
 
 const router = express.Router();
-const upload = multer({ dest: 'tmp/' }); // dossier temporaire
+const upload = multer({ dest: '/tmp' }); // Compatible Render
 
 router.post('/upload', upload.single('file'), async (req, res) => {
     try {
         const filePath = req.file.path;
-        const fileName = req.file.originalname;
+        const originalName = req.file.originalname;
+
+        // éviter les collisions
+        const fileName = `${Date.now()}-${originalName}`;
+
+        const fileBuffer = fs.readFileSync(filePath);
 
         const { data, error } = await supabase.storage
             .from('uploads')
-            .upload(fileName, fs.readFileSync(filePath), {
+            .upload(fileName, fileBuffer, {
                 cacheControl: '3600',
-                upsert: true
+                upsert: true,
+                contentType: req.file.mimetype
             });
 
         fs.unlinkSync(filePath); // supprime le fichier temporaire

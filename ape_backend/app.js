@@ -11,7 +11,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import fs from 'fs';
-import uploadRouter from './src/routers/shopRoutes.js';
+import uploadRouter from './src/routers/uploadRouter.js';
 
 
 
@@ -21,17 +21,11 @@ const __dirname = dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Configuration des fichiers statiques
-app.use('/uploads', (req, res, next) => {
-    console.log('Requête sur /uploads:', req.url);
-    next();
-});
-app.use('/uploads', express.static(join(__dirname, 'uploads')));
 
 // Middleware CORS
 const allowedOrigins = [
-    "http://localhost:5173",           // Front local pour dev
-    //"https://ape-frontend.vercel.app" // À remplacer par ton URL front en prod
+    "http://localhost:5173",
+    "https://ape-front-react.vercel.app/"
 ];
 
 app.use(cors({
