@@ -1,22 +1,16 @@
 import { Articles, Evenements } from '../models/associations.js';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
 
 const bureauController = {
     // ➤ Articles
     createArticle: async (req, res) => {
         try {
-            const { titre, contenu, contenu_bref } = req.body;
+            const { titre, contenu, contenu_bref, imageUrl } = req.body;
 
             const newArticle = await Articles.create({
                 titre,
                 contenu,
                 contenu_bref,
-                image: req.body.imageUrl || null
+                image: imageUrl || null  // <-- Supabase URL
             });
 
             res.status(201).json(newArticle);
@@ -26,17 +20,16 @@ const bureauController = {
         }
     },
 
-
     updateArticle: async (req, res) => {
         try {
             const { id } = req.params;
-            const { titre, contenu, contenu_bref } = req.body;
+            const { titre, contenu, contenu_bref, imageUrl } = req.body;
 
             const article = await Articles.findByPk(id);
             if (!article) return res.status(404).json({ message: "Article non trouvé" });
 
-            if (req.body.imageUrl) {
-                article.image = req.body.imageUrl;
+            if (imageUrl) {
+                article.image = imageUrl;  // <-- Remplace l'image si nouvelle URL Supabase
             }
 
             article.titre = titre;
@@ -51,7 +44,6 @@ const bureauController = {
             res.status(500).json({ message: "Erreur serveur" });
         }
     },
-
 
     deleteArticle: async (req, res) => {
         try {
@@ -76,7 +68,7 @@ const bureauController = {
                 titre,
                 description,
                 date_event,
-                image: imageUrl || null   // <-- enregistrer l'URL Supabase !
+                image: imageUrl || null  // <-- Supabase URL
             });
 
             res.status(201).json(newEvent);
@@ -85,7 +77,6 @@ const bureauController = {
             res.status(500).json({ message: "Erreur serveur" });
         }
     },
-
 
     updateEvent: async (req, res) => {
         try {
@@ -96,7 +87,7 @@ const bureauController = {
             if (!event) return res.status(404).json({ message: "Événement non trouvé" });
 
             if (imageUrl) {
-                event.image = imageUrl;  // <-- remplacer l'ancienne image
+                event.image = imageUrl;  // <-- Remplace l'image si nouvelle URL Supabase
             }
 
             event.titre = titre;
@@ -111,8 +102,6 @@ const bureauController = {
             res.status(500).json({ message: "Erreur serveur" });
         }
     },
-
-
 
     deleteEvent: async (req, res) => {
         try {
