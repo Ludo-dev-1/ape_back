@@ -10,13 +10,13 @@ const bureauController = {
     // ➤ Articles
     createArticle: async (req, res) => {
         try {
-            const { titre, contenu, contenu_bref } = req.body;
-            const image = req.file ? `/uploads/${req.file.filename}` : null;
+            const { titre, contenu_bref, contenu } = req.body;
+            const image = req.body.imageUrl || null; // URL Supabase
 
             const newArticle = await Articles.create({
                 titre,
-                contenu,
                 contenu_bref,
+                contenu,
                 image
             });
 
@@ -27,17 +27,17 @@ const bureauController = {
         }
     },
 
+
     updateArticle: async (req, res) => {
         try {
             const { id } = req.params;
             const { titre, contenu, contenu_bref } = req.body;
-            const article = await Articles.findByPk(id);
 
+            const article = await Articles.findByPk(id);
             if (!article) return res.status(404).json({ message: "Article non trouvé" });
 
-            // Si une nouvelle image est uploadée, on met à jour le chemin
-            if (req.file) {
-                article.image = `/uploads/${req.file.filename}`;
+            if (req.body.imageUrl) {
+                article.image = req.body.imageUrl;  // <--- SUPABASE URL
             }
 
             article.titre = titre;
