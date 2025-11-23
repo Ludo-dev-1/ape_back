@@ -34,8 +34,10 @@ const mainController = {
                     attributes: ['id', 'nom', 'prenom']
                 }
             });
+            console.log('Articles trouvés :', articles);
             res.status(200).json(articles);
         } catch (err) {
+            console.error("ERREUR DANS GET ARTICLES :", err);
             res.status(500).json({ message: err.message });
         }
     },
