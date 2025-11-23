@@ -89,28 +89,25 @@ const bureauController = {
 
     updateEvent: async (req, res) => {
         try {
-            const { id } = req.params;
-            const { titre, description, date_event } = req.body;
-            const event = await Evenements.findByPk(id);
+            const { titre, description, date_event, imageUrl } = req.body;
 
-            if (!event) return res.status(404).json({ message: "Événement non trouvé" });
+            const updated = await Evenements.update(
+                {
+                    titre,
+                    description,
+                    date_event,
+                    image: imageUrl || null
+                },
+                { where: { id: req.params.id } }
+            );
 
-            if (req.file) {
-                event.image = `/uploads/${req.file.filename}`;
-            }
-
-            event.titre = titre;
-            event.description = description;
-            event.date_event = date_event;
-
-            await event.save();
-
-            res.status(200).json(event);
+            res.json(updated);
         } catch (error) {
             console.error(error);
             res.status(500).json({ message: "Erreur serveur" });
         }
     },
+
 
     deleteEvent: async (req, res) => {
         try {
