@@ -41,7 +41,11 @@ Articles.init({
 },
     {
         sequelize,
-        tableName: "articles"
+        tableName: "articles",
+        timestamps: true,
+        createdAt: 'createdAt',
+        updatedAt: 'updatedAt',
+
     });
 
 
