@@ -10,14 +10,13 @@ const bureauController = {
     // ➤ Articles
     createArticle: async (req, res) => {
         try {
-            const { titre, contenu_bref, contenu } = req.body;
-            const image = req.body.imageUrl || null; // URL Supabase
+            const { titre, contenu, contenu_bref } = req.body;
 
             const newArticle = await Articles.create({
                 titre,
-                contenu_bref,
                 contenu,
-                image
+                contenu_bref,
+                image: req.body.imageUrl || null
             });
 
             res.status(201).json(newArticle);
@@ -37,7 +36,7 @@ const bureauController = {
             if (!article) return res.status(404).json({ message: "Article non trouvé" });
 
             if (req.body.imageUrl) {
-                article.image = req.body.imageUrl;  // <--- SUPABASE URL
+                article.image = req.body.imageUrl;
             }
 
             article.titre = titre;
@@ -52,6 +51,7 @@ const bureauController = {
             res.status(500).json({ message: "Erreur serveur" });
         }
     },
+
 
     deleteArticle: async (req, res) => {
         try {
@@ -70,14 +70,13 @@ const bureauController = {
     // ➤ Événements
     createEvent: async (req, res) => {
         try {
-            const { titre, description, date_event } = req.body;
-            const image = req.file ? `/uploads/${req.file.filename}` : null;
+            const { titre, description, date_event, imageUrl } = req.body;
 
             const newEvent = await Evenements.create({
                 titre,
                 description,
                 date_event,
-                image
+                image: imageUrl || null   // <-- enregistrer l'URL Supabase !
             });
 
             res.status(201).json(newEvent);
@@ -87,26 +86,32 @@ const bureauController = {
         }
     },
 
+
     updateEvent: async (req, res) => {
         try {
+            const { id } = req.params;
             const { titre, description, date_event, imageUrl } = req.body;
 
-            const updated = await Evenements.update(
-                {
-                    titre,
-                    description,
-                    date_event,
-                    image: imageUrl || null
-                },
-                { where: { id: req.params.id } }
-            );
+            const event = await Evenements.findByPk(id);
+            if (!event) return res.status(404).json({ message: "Événement non trouvé" });
 
-            res.json(updated);
+            if (imageUrl) {
+                event.image = imageUrl;  // <-- remplacer l'ancienne image
+            }
+
+            event.titre = titre;
+            event.description = description;
+            event.date_event = date_event;
+
+            await event.save();
+
+            res.status(200).json(event);
         } catch (error) {
             console.error(error);
             res.status(500).json({ message: "Erreur serveur" });
         }
     },
+
 
 
     deleteEvent: async (req, res) => {
