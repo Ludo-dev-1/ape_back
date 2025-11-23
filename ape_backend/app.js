@@ -25,24 +25,19 @@ const PORT = process.env.PORT || 3000;
 // Middleware CORS
 const allowedOrigins = [
     "http://localhost:5173",
-    "http://localhost:4200",
-    "https://ape-frontend.onrender.com",
-    "https://ape-frontend-xxxxx.onrender.com"
+    "https://ape-front-react.vercel.app"
 ];
 
 app.use(cors({
     origin: function (origin, callback) {
-        // autorise les requêtes sans origin (ex: postman)
-        if (!origin) return callback(null, true);
-
-        if (allowedOrigins.includes(origin)) {
-            return callback(null, true);
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
         } else {
-            console.error("❌ CORS refusé pour :", origin);
-            return callback(new Error("CORS: origine non autorisée"));
+            console.log("❌ CORS refusé pour :", origin);
+            callback(new Error("CORS: origine non autorisée"));
         }
     },
-    credentials: true
+    credentials: true,
 }));
 
 
