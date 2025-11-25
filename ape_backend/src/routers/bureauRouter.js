@@ -19,6 +19,9 @@ bureauRouter.post('/articles', upload.single('image'), async (req, res, next) =>
                 Date.now() + path.extname(req.file.originalname)
             );
             req.body.imageUrl = publicUrl;
+            console.log("body:", req.body);
+            console.log("file:", req.file);
+
         }
         await bureauController.createArticle(req, res);
     } catch (err) {
