@@ -19,14 +19,22 @@ export const uploadFileToSupabase = async (filePath, fileName, bucket = 'uploads
     return data.path;
 };
 
-// Nouvelle fonction : uploader depuis un buffer (pour multer memoryStorage)
 export const uploadBufferToSupabase = async (buffer, fileName, bucket = 'uploads') => {
-    const { data, error } = await supabase.storage.from(bucket).upload(fileName, buffer, {
-        cacheControl: '3600',
-        upsert: true,
-    });
+    // Upload du fichier
+    const { data, error } = await supabase.storage
+        .from(bucket)
+        .upload(fileName, buffer, {
+            cacheControl: '3600',
+            upsert: true,
+        });
+
     if (error) throw error;
 
-    const publicUrl = supabase.storage.from(bucket).getPublicUrl(fileName).publicUrl;
-    return publicUrl;
+    // Récupération URL publique (CORRECTION ICI)
+    const { data: publicData } = supabase.storage
+        .from(bucket)
+        .getPublicUrl(fileName);
+
+    return publicData.publicUrl; // ✔️ URL correcte
 };
+
