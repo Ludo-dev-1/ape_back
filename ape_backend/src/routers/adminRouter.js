@@ -20,35 +20,42 @@ adminRouter.post(
     "/sales",
     authenticate,
     checkAdminAccess,
-    upload.fields([
-        { name: "saleImage", maxCount: 1 },
-        { name: "productImages", maxCount: 10 }
-    ]),
+    upload.any(), // accepte tout productImage_xxx
     async (req, res, next) => {
         try {
-            // Sale image
-            if (req.files.saleImage) {
-                const saleFile = req.files.saleImage[0];
+            const files = req.files;
+
+            // Upload image de la vente
+            const saleFile = files.find(f => f.fieldname === "saleImage");
+            if (saleFile) {
                 req.body.saleImageUrl = await uploadBufferToSupabase(
                     saleFile.buffer,
                     Date.now() + path.extname(saleFile.originalname)
                 );
             }
-            // Product images
-            if (req.files.productImages) {
-                req.body.productImagesUrls = await Promise.all(
-                    req.files.productImages.map(file =>
-                        uploadBufferToSupabase(file.buffer, Date.now() + path.extname(file.originalname))
-                    )
-                );
+
+            // Upload images produits
+            req.body.productImagesMap = {};
+
+            for (const file of files) {
+                if (file.fieldname.startsWith("productImage_")) {
+                    const tempId = file.fieldname.replace("productImage_", "");
+                    const url = await uploadBufferToSupabase(
+                        file.buffer,
+                        Date.now() + path.extname(file.originalname)
+                    );
+                    req.body.productImagesMap[tempId] = url;
+                }
             }
 
             await adminController.createSaleWithProducts(req, res);
+
         } catch (err) {
             next(err);
         }
     }
 );
+
 
 // Mise à jour d’une vente avec images
 adminRouter.patch(

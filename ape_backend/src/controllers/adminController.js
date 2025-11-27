@@ -54,27 +54,18 @@ const adminController = {
             res.status(500).json({ message: error.message });
         }
     },
-    // Créer une vente avec ses produits
+
     // Créer une vente avec ses produits
     createSaleWithProducts: async (req, res) => {
         try {
-            const { name, start_date, end_date } = req.body;
+            const { name, start_date, end_date, saleImageUrl, productImagesMap } = req.body;
 
-            // Parse des produits (venant du front sous forme de string JSON)
-            let parsedProducts = [];
-            if (Array.isArray(req.body.products)) {
-                parsedProducts = req.body.products.map((p) =>
-                    typeof p === "string" ? JSON.parse(p) : p
-                );
-            } else if (typeof req.body.products === "string") {
-                parsedProducts = JSON.parse(req.body.products);
-            }
+            let parsedProducts = JSON.parse(req.body.products);
 
-            if (!name || !start_date || !end_date || !parsedProducts || parsedProducts.length === 0) {
+            if (!name || !start_date || !end_date || parsedProducts.length === 0) {
                 return res.status(400).json({ message: "Champs manquants" });
             }
 
-            // Calcul automatique de is_active selon les dates
             const now = new Date();
             const start = new Date(start_date);
             const end = new Date(end_date);
@@ -82,45 +73,42 @@ const adminController = {
 
             const isActive = now >= start && now <= end;
 
-            // Gestion de l'image de la vente
-            let saleImagePath = null;
-            if (req.files?.saleImage?.[0]) {
-                saleImagePath = `/uploads/${req.files.saleImage[0].filename}`;
-            }
-
-            // Création de la vente
+            // --- CRÉATION DE LA VENTE ---
             const newSale = await Sale.create({
                 name,
                 start_date,
                 end_date,
+                picture: saleImageUrl || null,  // <-- URL SUPABASE
                 is_active: isActive,
-                picture: saleImagePath,
             });
 
-            // Création des produits associés
-            const products = await Promise.all(
-                parsedProducts.map(async (prod, index) => {
-                    const image = req.files?.productImages?.[index]?.filename;
+            // --- CRÉATION DES PRODUITS ---
+            const createdProducts = await Promise.all(
+                parsedProducts.map(prod => {
+                    const imageUrl = productImagesMap[prod.tempId] || null;
+
                     return Product.create({
                         name: prod.name,
                         price: prod.price,
-                        quantity: prod.quantity,
-                        description: prod.description || "",
+                        quantity: prod.stock,
+                        description: prod.description,
                         sale_id: newSale.id,
-                        image_url: image ? `/uploads/${image}` : prod.image_url || null,
+                        image_url: imageUrl, // <-- URL SUPABASE
                     });
                 })
             );
 
             return res.status(201).json({
-                sale: newSale.toJSON(),
-                products: products.map((p) => p.toJSON()),
+                sale: newSale,
+                products: createdProducts,
             });
+
         } catch (error) {
             console.error(error);
             return res.status(500).json({ message: "Erreur serveur" });
         }
     },
+
 
 
     // Supprimer une vente et ses produits
