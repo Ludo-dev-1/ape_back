@@ -166,7 +166,7 @@ const adminController = {
 
             if (!sale) return res.status(404).json({ message: "Vente non trouvée" });
 
-            // Parse products correctement avant la validation
+            // --- PARSING DES PRODUITS ---
             let parsedProducts = [];
             if (Array.isArray(req.body.products)) {
                 parsedProducts = req.body.products.map((p) =>
@@ -176,61 +176,84 @@ const adminController = {
                 parsedProducts = JSON.parse(req.body.products);
             }
 
-            if (!name || !start_date || !end_date || !parsedProducts || parsedProducts.length === 0) {
+            if (!name || !start_date || !end_date || parsedProducts.length === 0) {
                 return res.status(400).json({ message: "Champs manquants" });
             }
 
-            // Calcul automatique de is_active selon les dates
+            // --- CALCUL IS_ACTIVE ---
             const now = new Date();
             const start = new Date(start_date);
             const end = new Date(end_date);
-            end.setHours(23, 59, 59, 999); // inclure toute la journée de fin
-
+            end.setHours(23, 59, 59, 999);
             const isActive = now >= start && now <= end;
 
-            // Mise à jour des infos de la vente
+            // --- MISE A JOUR DE LA VENTE ---
             sale.name = name;
             sale.start_date = start_date;
             sale.end_date = end_date;
             sale.is_active = isActive;
 
-            if (req.files?.saleImage) {
-                sale.picture = `/uploads/${req.files.saleImage[0].filename}`;
+            if (req.body.saleImageUrl) {
+                sale.picture = req.body.saleImageUrl; // URL Supabase
             }
 
             await sale.save();
 
-            // Mettre à jour ou créer les produits liés
-            const updatedProducts = await Promise.all(
-                parsedProducts.map(async (prod, index) => {
-                    const image = req.files?.productImages?.[index]?.filename;
+
+            // --- MISE A JOUR DES PRODUITS ---
+            const existingIds = sale.products.map((p) => p.id);
+            const incomingIds = parsedProducts.filter(p => p.id).map(p => p.id);
+
+            // Suppression des anciens produits non présents dans la mise à jour
+            for (const oldId of existingIds) {
+                if (!incomingIds.includes(oldId)) {
+                    await Product.destroy({ where: { id: oldId } });
+                }
+            }
+
+            const updatedProducts = [];
+
+            for (const prod of parsedProducts) {
+                const imageUrl =
+                    req.body.productImagesMap?.[prod.tempId] || // nouvelle image uploadée
+                    prod.image_url ||                            // ancienne image conservée
+                    null;
+
+                if (prod.id) {
+                    // --- PRODUIT EXISTANT ---
                     const existingProduct = sale.products.find((p) => p.id === prod.id);
 
                     if (existingProduct) {
-                        // Mettre à jour le produit existant
                         existingProduct.name = prod.name;
                         existingProduct.price = prod.price;
-                        existingProduct.quantity = prod.quantity;
-                        existingProduct.image_url = image
-                            ? `/uploads/${image}`
-                            : existingProduct.image_url;
+                        existingProduct.quantity = prod.quantity ?? 0;
+                        existingProduct.description = prod.description || "";
+                        existingProduct.image_url = imageUrl;
+
                         await existingProduct.save();
-                        return existingProduct;
-                    } else {
-                        // Créer un nouveau produit
-                        return Product.create({
-                            ...prod,
-                            sale_id: sale.id,
-                            image_url: image ? `/uploads/${image}` : prod.image_url || null,
-                        });
+                        updatedProducts.push(existingProduct);
+                        continue;
                     }
-                })
-            );
+                }
+
+                // --- NOUVEAU PRODUIT ---
+                const newProduct = await Product.create({
+                    name: prod.name,
+                    price: prod.price,
+                    quantity: prod.quantity ?? 0,
+                    description: prod.description || "",
+                    sale_id: sale.id,
+                    image_url: imageUrl
+                });
+
+                updatedProducts.push(newProduct);
+            }
 
             return res.status(200).json({
                 sale: sale.toJSON(),
                 products: updatedProducts.map((p) => p.toJSON()),
             });
+
         } catch (error) {
             console.error(error);
             return res.status(500).json({ message: "Erreur serveur" });

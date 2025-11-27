@@ -62,32 +62,38 @@ adminRouter.patch(
     "/sales/:id",
     authenticate,
     checkAdminAccess,
-    upload.fields([
-        { name: "saleImage", maxCount: 1 },
-        { name: "productImages", maxCount: 10 },
-    ]),
+    upload.any(), // ← capture tous les fichiers, même productImage_123
     async (req, res, next) => {
         try {
-            if (req.files.saleImage) {
-                const saleFile = req.files.saleImage[0];
+            // Upload saleImage s'il existe
+            const saleImageFile = req.files.find(f => f.fieldname === "saleImage");
+            if (saleImageFile) {
                 req.body.saleImageUrl = await uploadBufferToSupabase(
-                    saleFile.buffer,
-                    Date.now() + path.extname(saleFile.originalname)
+                    saleImageFile.buffer,
+                    Date.now() + path.extname(saleImageFile.originalname)
                 );
             }
-            if (req.files.productImages) {
-                req.body.productImagesUrls = await Promise.all(
-                    req.files.productImages.map(file =>
-                        uploadBufferToSupabase(file.buffer, Date.now() + path.extname(file.originalname))
-                    )
-                );
+
+            // Construire une map productImages: { tempId : urlSupabase }
+            req.body.productImagesMap = {};
+
+            for (const file of req.files) {
+                if (file.fieldname.startsWith("productImage_")) {
+                    const tempId = file.fieldname.replace("productImage_", "");
+                    req.body.productImagesMap[tempId] = await uploadBufferToSupabase(
+                        file.buffer,
+                        Date.now() + path.extname(file.originalname)
+                    );
+                }
             }
+
             await adminController.updateSaleWithProducts(req, res);
         } catch (err) {
             next(err);
         }
     }
 );
+
 
 adminRouter.delete("/sales/:id", authenticate, checkAdminAccess, adminController.deleteSale);
 adminRouter.get("/sales", authenticate, checkAdminAccess, adminController.getAllSales);
