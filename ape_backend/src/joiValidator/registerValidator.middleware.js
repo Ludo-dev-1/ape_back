@@ -1,5 +1,5 @@
 import Joi from "joi";
-import { validate } from "./validate.middleware.js";
+import { validate } from "./joiValidatorGeneric.middleware.js";
 
 export const registerValidatorSchema = Joi.object({
     firstname: Joi.string()
