@@ -65,8 +65,7 @@ const authController = {
                 throw error;
             }
 
-            console.log("user:", user);
-            // Génération du token
+
             const token = generateToken({
                 id: user.id,
                 email: user.email,
