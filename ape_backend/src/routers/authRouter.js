@@ -10,5 +10,6 @@ authRouter.post("/login", authController.login);
 authRouter.post("/register", validateRegister, authController.register);
 authRouter.get("/profile", authenticate, authController.getProfile);
 authRouter.post("/change-password", authenticate, authController.changePassword);
+authRouter.delete("/delete-account/:email", authenticate, authController.deleteAccount);
 
 export default authRouter;
