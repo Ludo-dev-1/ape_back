@@ -1,4 +1,4 @@
-import { Articles, Parents, Evenements } from "../models/associations.js";
+import { Articles, Parents, Evenements, Vote } from "../models/associations.js";
 
 
 
@@ -92,10 +92,7 @@ const mainController = {
                 return res.status(400).json({ message: "Option requise" });
             }
 
-            await db.query(
-                "INSERT INTO votes(option) VALUES($1)",
-                [option]
-            );
+            await Vote.create({ option });
 
             res.status(200).json({ message: "Vote enregistré avec succès" });
         } catch (err) {
@@ -105,14 +102,17 @@ const mainController = {
 
     getPollResults: async (req, res) => {
         try {
-            const result = await db.query(`
-            SELECT option, COUNT(*) as count
-            FROM votes
-            GROUP BY option
-        `);
+            const results = await Vote.findAll({
+                attributes: [
+                    "option",
+                    [Sequelize.fn("COUNT", Sequelize.col("option")), "count"]
+                ],
+                group: ["option"]
+            });
 
-            res.status(200).json(result.rows);
+            res.status(200).json(results);
         } catch (err) {
+            console.error(err);
             res.status(500).json({ message: err.message });
         }
     }
