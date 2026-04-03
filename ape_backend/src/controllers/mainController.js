@@ -1,5 +1,6 @@
-import { Articles, Parents, Evenements, Vote } from "../models/associations.js";
-
+import { Articles, Parents, Evenements } from "../models/associations.js";
+import { Vote } from "../models/vote.js";
+import { Sequelize } from "sequelize";
 
 
 const mainController = {
