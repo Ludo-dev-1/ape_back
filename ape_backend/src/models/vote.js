@@ -18,6 +18,6 @@ Vote.init(
     {
         sequelize,
         tableName: "votes",
-        timestamps: false,
+        timestamps: true, // utilise created_at / updated_at
     }
 );

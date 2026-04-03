@@ -88,15 +88,12 @@ const mainController = {
     postVotePoll: async (req, res) => {
         try {
             const { option } = req.body;
-
-            if (!option) {
-                return res.status(400).json({ message: "Option requise" });
-            }
+            if (!option) return res.status(400).json({ message: "Option requise" });
 
             await Vote.create({ option });
-
             res.status(200).json({ message: "Vote enregistré avec succès" });
         } catch (err) {
+            console.error(err);
             res.status(500).json({ message: err.message });
         }
     },
@@ -110,14 +107,12 @@ const mainController = {
                 ],
                 group: ["option"]
             });
-
             res.status(200).json(results);
         } catch (err) {
             console.error(err);
             res.status(500).json({ message: err.message });
         }
     }
-
 }
 
 export default mainController;

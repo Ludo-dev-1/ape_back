@@ -41,6 +41,16 @@ app.use(cors({
 }));
 
 
+connectToDatabase().then(async () => {
+    // Crée la table votes si elle n'existe pas
+    await sequelize.sync({ force: false });
+    console.log("✅ Tables synchronisées");
+
+    app.listen(PORT, () => {
+        console.log(`🚀 Serveur lancé sur http://localhost:${PORT}`);
+    });
+});
+
 // Middleware
 app.use(express.json());
 
