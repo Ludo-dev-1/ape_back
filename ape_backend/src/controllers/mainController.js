@@ -1,6 +1,7 @@
 import { Articles, Parents, Evenements } from "../models/associations.js";
 
 
+
 const mainController = {
     createArticle: async (req, res) => {
         try {
@@ -78,6 +79,39 @@ const mainController = {
             }
 
             res.status(200).json(event);
+        } catch (err) {
+            res.status(500).json({ message: err.message });
+        }
+    },
+
+    postVotePoll: async (req, res) => {
+        try {
+            const { option } = req.body;
+
+            if (!option) {
+                return res.status(400).json({ message: "Option requise" });
+            }
+
+            await db.query(
+                "INSERT INTO votes(option) VALUES($1)",
+                [option]
+            );
+
+            res.status(200).json({ message: "Vote enregistré avec succès" });
+        } catch (err) {
+            res.status(500).json({ message: err.message });
+        }
+    },
+
+    getPollResults: async (req, res) => {
+        try {
+            const result = await db.query(`
+            SELECT option, COUNT(*) as count
+            FROM votes
+            GROUP BY option
+        `);
+
+            res.status(200).json(result.rows);
         } catch (err) {
             res.status(500).json({ message: err.message });
         }
