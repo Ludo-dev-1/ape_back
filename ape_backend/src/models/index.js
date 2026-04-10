@@ -10,6 +10,7 @@ import { Product } from "./products.js";
 import { Order } from "./order.js";
 import { OrderItem } from "./orderItem.js";
 import { Sale } from "./sale.js";
+import { Vote } from "./vote.js";
 
 // Import des associations
 import "./associations.js";
@@ -23,5 +24,6 @@ export {
     Order,
     OrderItem,
     Sale,
+    Vote,
     sequelize,
 };

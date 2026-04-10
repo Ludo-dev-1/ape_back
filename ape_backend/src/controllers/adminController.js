@@ -1,5 +1,6 @@
 import { log } from "console";
 import { Roles, Parents, Sale, Product } from "../models/associations.js";
+import { Vote } from "../models/vote.js";
 import { Op } from "sequelize";
 
 const adminController = {
@@ -25,7 +26,6 @@ const adminController = {
             res.status(500).json({ message: error.message });
         }
     },
-
 
     // Mettre à jour le rôle d'un parent
     updateRole: async (req, res) => {
@@ -109,8 +109,6 @@ const adminController = {
         }
     },
 
-
-
     // Supprimer une vente et ses produits
     deleteSale: async (req, res) => {
         try {
@@ -143,7 +141,6 @@ const adminController = {
             res.status(500).json({ message: "Erreur serveur" });
         }
     },
-
 
     getAllSalesWithProducts: async (req, res) => {
         try {
@@ -260,7 +257,6 @@ const adminController = {
         }
     },
 
-
     deleteProduct: async (req, res) => {
         try {
             const product = await Product.findByPk(req.params.id);
@@ -282,6 +278,131 @@ const adminController = {
         } catch (error) {
             console.error(error);
             res.status(500).json({ message: "Erreur serveur" });
+        }
+    },
+
+    // ===== VOTES / SONDAGE =====
+
+    // Mettre à jour le titre du sondage
+    updatePollTitle: async (req, res) => {
+        try {
+            const { title } = req.body;
+
+            if (!title || !title.trim()) {
+                return res.status(400).json({ message: "Le titre du sondage est requis" });
+            }
+
+            // Récupérer tous les votes et mettre à jour leur titre
+            // (Supposant un seul sondage avec le même titre pour tous les votes)
+            const votes = await Vote.findAll();
+
+            if (votes.length === 0) {
+                return res.status(404).json({ message: "Aucun vote trouvé" });
+            }
+
+            // Mettre à jour tous les votes avec le nouveau titre
+            await Promise.all(
+                votes.map(vote =>
+                    vote.update({ title: title.trim() })
+                )
+            );
+
+            res.json({
+                message: "Le titre du sondage a été mis à jour",
+                title: title.trim()
+            });
+        } catch (error) {
+            console.error("Erreur mise à jour titre sondage:", error);
+            res.status(500).json({ message: error.message || "Erreur serveur" });
+        }
+    },
+
+    // Mettre à jour une option de vote (choice)
+    updateVoteOption: async (req, res) => {
+        try {
+            const { id } = req.params;
+            const { option } = req.body;
+
+            if (!option || !option.trim()) {
+                return res.status(400).json({ message: "Le libellé du choix est requis" });
+            }
+
+            const vote = await Vote.findByPk(id);
+
+            if (!vote) {
+                return res.status(404).json({ message: "Option de vote non trouvée" });
+            }
+
+            // Mettre à jour l'option
+            await vote.update({
+                option: option.trim()
+            });
+
+            res.json({
+                message: "L'option de vote a été mise à jour",
+                choice: {
+                    id: vote.id,
+                    option: vote.option,
+                    count: vote.count
+                }
+            });
+        } catch (error) {
+            console.error("Erreur mise à jour option vote:", error);
+            res.status(500).json({ message: error.message || "Erreur serveur" });
+        }
+    },
+
+    // Supprimer une option de vote
+    deleteVoteOption: async (req, res) => {
+        try {
+            const { id } = req.params;
+
+            const vote = await Vote.findByPk(id);
+
+            if (!vote) {
+                return res.status(404).json({ message: "Option de vote non trouvée" });
+            }
+
+            await vote.destroy();
+
+            res.json({
+                message: "L'option de vote a été supprimée",
+                deletedId: id
+            });
+        } catch (error) {
+            console.error("Erreur suppression option vote:", error);
+            res.status(500).json({ message: error.message || "Erreur serveur" });
+        }
+    },
+
+    // Récupérer tous les votes (options du sondage)
+    getAllVotes: async (req, res) => {
+        try {
+            const votes = await Vote.findAll({
+                order: [['createdAt', 'ASC']]
+            });
+
+            if (votes.length === 0) {
+                return res.json({
+                    title: "Sondage sans titre",
+                    choices: []
+                });
+            }
+
+            const title = votes[0].title;
+            const choices = votes.map(vote => ({
+                id: vote.id,
+                option: vote.option,
+                count: vote.count
+            }));
+
+            res.json({
+                title,
+                choices
+            });
+        } catch (error) {
+            console.error("Erreur récupération votes:", error);
+            res.status(500).json({ message: error.message || "Erreur serveur" });
         }
     },
 

@@ -10,9 +10,19 @@ Vote.init(
             primaryKey: true,
             autoIncrement: true,
         },
+        title: {
+            type: DataTypes.STRING(255),
+            allowNull: false,
+            defaultValue: "Sondage sans titre",
+        },
         option: {
             type: DataTypes.STRING(50),
             allowNull: false,
+        },
+        count: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+            defaultValue: 0,
         },
     },
     {

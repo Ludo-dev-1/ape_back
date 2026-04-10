@@ -55,14 +55,12 @@ adminRouter.post(
         }
     }
 );
-
-
 // Mise à jour d’une vente avec images
 adminRouter.patch(
     "/sales/:id",
     authenticate,
     checkAdminAccess,
-    upload.any(), // ← capture tous les fichiers, même productImage_123
+    upload.any(),
     async (req, res, next) => {
         try {
             // Upload saleImage s'il existe
@@ -100,5 +98,11 @@ adminRouter.get("/sales", authenticate, checkAdminAccess, adminController.getAll
 adminRouter.get("/sales/:saleId/products", authenticate, checkAdminAccess, adminController.getAllSalesWithProducts);
 adminRouter.delete("/products/:id", authenticate, checkAdminAccess, adminController.deleteProduct);
 adminRouter.delete("/account/:email", authenticate, checkAdminAccess, adminController.deleteAccount);
+
+// Routes Votes / Sondage
+adminRouter.get("/votes", authenticate, checkAdminAccess, adminController.getAllVotes);
+adminRouter.put("/votes/title", authenticate, checkAdminAccess, adminController.updatePollTitle);
+adminRouter.put("/votes/:id", authenticate, checkAdminAccess, adminController.updateVoteOption);
+adminRouter.delete("/votes/:id", authenticate, checkAdminAccess, adminController.deleteVoteOption);
 
 export default adminRouter;
