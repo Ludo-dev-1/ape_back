@@ -379,7 +379,7 @@ const adminController = {
     getAllVotes: async (req, res) => {
         try {
             const votes = await Vote.findAll({
-                order: [['createdAt', 'ASC']]
+                order: [['created_at', 'ASC']]
             });
 
             if (votes.length === 0) {

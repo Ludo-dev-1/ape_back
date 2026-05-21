@@ -24,10 +24,20 @@ Vote.init(
             allowNull: false,
             defaultValue: 0,
         },
+        created_at: {
+            type: DataTypes.DATE,
+            field: "created_at"
+        },
+        updated_at: {
+            type: DataTypes.DATE,
+            field: "updated_at"
+        }
     },
     {
         sequelize,
         tableName: "votes",
-        timestamps: true, // utilise created_at / updated_at
+        timestamps: true,
+        createdAt: "created_at",
+        updatedAt: "updated_at"
     }
 );
