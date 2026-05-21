@@ -13,6 +13,6 @@ mainRouter.get("/event/:id", mainController.getEvent);
 
 // Route pour gérer le résultat d'un vote au sondage
 mainRouter.post("/votes", mainController.postVotePoll);
-mainRouter.get("/votes/results", mainController.getPollResults);
+mainRouter.get("/votes/results", mainController.getPublicResults);
 
 export { mainRouter };

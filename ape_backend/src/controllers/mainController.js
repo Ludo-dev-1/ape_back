@@ -112,7 +112,38 @@ const mainController = {
             console.error(err);
             res.status(500).json({ message: err.message });
         }
+    },
+
+    // Route publique : résultats + titre
+    getPublicResults: async (req, res) => {
+        try {
+            const votes = await Vote.findAll({
+                order: [['created_at', 'ASC']]
+            });
+
+            if (votes.length === 0) {
+                return res.json({
+                    title: "Sondage sans titre",
+                    choices: []
+                });
+            }
+
+            const title = votes[0].title;
+
+            const choices = votes.map(v => ({
+                option: v.option,
+                count: v.count
+            }));
+
+            res.json({ title, choices });
+
+        } catch (error) {
+            res.status(500).json({ message: error.message });
+        }
     }
+
+
+
 }
 
 export default mainController;
